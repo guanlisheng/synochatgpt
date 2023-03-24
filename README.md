@@ -1,4 +1,7 @@
 
+## Synochatgpt
+Inspired by [synochat](https://github.com/bitcanon/synochat) and [chatgpt](https://chat.openai.com)
+
 ## Usage
 
 The library needs to be configured with your account's secret key which is available on the [website](https://platform.openai.com/account/api-keys). set it as the `OPENAI_API_KEY` environment variable before using the library:
