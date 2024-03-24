@@ -1,4 +1,4 @@
-import openai
+from openai import OpenAI
 import time
 import os
 
@@ -51,15 +51,20 @@ def process_gpt_response(webhook):
         content = entry['content']
         messages.append({"role": role, "content": content})
 
-    response = openai.ChatCompletion.create(
-        model="gpt-3.5-turbo",
+    client = OpenAI(
+        base_url='http://127.0.0.1:11434/v1/',
+
+        # required but ignored
+        api_key='ollama',
+    )
+    response = client.chat.completions.create(
         messages=messages,
-        temperature=temperature,
+        model='mistral',
     )
 
-    response_role = response['choices'][0]['message']['role']
-    if response['choices'][0]['finish_reason'] == "stop":
-        response_text = response['choices'][0]['message']['content']
+    response_role = response.choices[0].message.role
+    if response.choices[0].finish_reason == "stop":
+        response_text = response.choices[0].message.content
         conversation_history[user_id]["messages"].append({"role": response_role, "content": response_text})
     else:
         conversation_history[user_id]["messages"].append({"role": response_role, "content": f"error: stop reason - {response['choices'][0]['finish_reason']}"})
