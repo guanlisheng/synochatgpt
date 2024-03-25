@@ -16,14 +16,15 @@ Source: https://kb.synology.com/en-us/DSM/tutorial/How_to_configure_webhooks_and
 class IncomingWebhook(object):
 	""" Class definition of an incoming webhook in Synology Chat. """
 
-	def __init__(self, hostname, token, port=443, verify_ssl=True, send_delay_enabled=True, send_delay=0.5):
+	def __init__(self, hostname, token, user_ids, method = 'chatbot', port=443, verify_ssl=True, send_delay_enabled=True, send_delay=0.5):
 		""" Initiate the object. """
 		self.__hostname = hostname
 		self.__port = port
 		self.__use_https = True
 		self.__verify_ssl = verify_ssl
 		self.__api = 'SYNO.Chat.External'
-		self.__method = 'incoming'
+		self.__method = method
+		self.__user_ids = user_ids
 		self.__version = '2'
 		self.__token = token
 		self.__send_delay_enabled = send_delay_enabled
@@ -51,7 +52,7 @@ class IncomingWebhook(object):
 		url = f"{protocol}://{self.__hostname}:{self.__port}/webapi/entry.cgi"
 
 		# Data dictionary to be sent to the server
-		payload_data = {'text': text}
+		payload_data = {'text': text, 'user_ids': self.user_ids}
 
 		# Check if there is a URL to include in the request
 		if file_url:
@@ -192,6 +193,13 @@ class IncomingWebhook(object):
 	def send_delay_enabled(self, send_delay_enabled):
 		self.__send_delay_enabled = send_delay_enabled
 
+	@property
+	def user_ids(self):
+	       return self.__user_ids
+
+	@user_ids.setter
+	def user_ids(self, user_ids):
+	       self.__user_ids = user_ids
 
 class Parameter(object):
 	""" Slash command parameter. """
