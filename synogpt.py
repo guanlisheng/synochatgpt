@@ -4,6 +4,7 @@ import os
 
 from flask import Flask, request
 from synochat.webhooks import OutgoingWebhook
+from synochat.webhooks import IncomingWebhook
 
 app = Flask(__name__)
 
@@ -78,7 +79,9 @@ def echo():
 
     if not webhook.authenticate(token):
         return webhook.createResponse('Outgoing Webhook authentication failed: Token mismatch.')
-   
+
+    url = os.environ.get("SYNOLOGY_INCOMING_URL")
+    bot = IncomingWebhook(url, port=5002, token=token, user_ids=[webhook.user_id])
     if app.debug:
         print("\n" + webhook.text + "\n")
 
@@ -87,7 +90,8 @@ def echo():
     if app.debug:
         print("\n" + reply + "\n")
 
-    return webhook.createResponse(reply)
+    bot.send(reply)
+    return "echo completed"
 
 if __name__ == '__main__':
    app.run('0.0.0.0', port=5001, debug = True)
