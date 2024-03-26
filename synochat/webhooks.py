@@ -390,6 +390,7 @@ class OutgoingWebhook(object):
 	('thread_id', '0'), 
 	('timestamp', '1646827836131'), 
 	('text', 'Tjena'), 
+	('file_name', 'VoiceMessage-1711424983.727119.aac'),
 	('trigger_word', 'Tjena')
 	"""
 
@@ -406,6 +407,7 @@ class OutgoingWebhook(object):
 		self.__thread_id 	= data['thread_id']
 		self.__timestamp 	= data['timestamp']
 		self.__text 		= data['text']
+		self.__file_name	= data.get('file_name')
 		self.__trigger_word = data.get('trigger_word')
 		self.__verbose 		= verbose
 
@@ -518,6 +520,10 @@ class OutgoingWebhook(object):
 	@property
 	def text(self):
 		return self.__text
+
+	@property
+	def file_name(self):
+		return self.__file_name
 
 	@property
 	def trigger_word(self):
