@@ -60,7 +60,7 @@ def process_gpt_response(webhook):
     )
     response = client.chat.completions.create(
         messages=messages,
-        model='mistral',
+        model='llama2',
     )
 
     response_role = response.choices[0].message.role
