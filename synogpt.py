@@ -12,12 +12,7 @@ app = Flask(__name__)
 conversation_history = {}
 
 # This system prompt sets up the character of the chatbot; change it if you want
-chatbot_character = '''You are a AI assistant, a friend of mine, trying to help me and my family as much as possible and in whatever ways you can. 
-    If the user talks to you in English, you respond in English. If the user talks to you in Chinese, you respond in Chinese. 
-    Be talkative, personable, friendly, positive, and speak always with love.'''
-
-# Set temperature -- a parameter in the OpenAI API that controls the randomness of the generated text. It is a floating-point value that ranges from 0 to 1. A higher value (e.g., 0.8) will result in more random and creative outputs, while a lower value (e.g., 0.2) will produce more focused and deterministic outputs. In this case, the temperature is set to 0.5, which provides a balance between creativity and determinism in the generated text.
-temperature = 0.7
+chatbot_character = '''Be a helpful assistant.'''
 
 # Set maximum conversation exchanges or idle time gap to start a new conversatoin
 max_conversation_length = 20 
@@ -60,7 +55,7 @@ def process_gpt_response(webhook):
     )
     response = client.chat.completions.create(
         messages=messages,
-        model='llama2',
+        model='gemma:7b',
     )
 
     response_role = response.choices[0].message.role
@@ -68,7 +63,7 @@ def process_gpt_response(webhook):
         response_text = response.choices[0].message.content
         conversation_history[user_id]["messages"].append({"role": response_role, "content": response_text})
     else:
-        conversation_history[user_id]["messages"].append({"role": response_role, "content": f"error: stop reason - {response['choices'][0]['finish_reason']}"})
+        conversation_history[user_id]["messages"].append({"role": response_role, "content": f"error: stop reason - {response.choices[0].finish_reason}"})
 
     return response_text
 
