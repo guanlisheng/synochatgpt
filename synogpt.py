@@ -55,6 +55,7 @@ def process_gpt_response(webhook):
     )
     response = client.chat.completions.create(
         messages=messages,
+        temperature=0.3,
         model='gemma:7b',
     )
 
