@@ -1,11 +1,18 @@
 
 ## Synochatgpt
-Inspired by [synochat](https://github.com/bitcanon/synochat), [chatgpt](https://chat.openai.com) and [ollama](https://ollama.com/)
+Inspired by [synochat](https://github.com/bitcanon/synochat), [chatgpt](https://chat.openai.com) and [ollama](https://ollama.com/).
+
 The goal is to run LLM 100% locally and integrate as a [chatbot](https://kb.synology.com/en-id/DSM/help/Chat/chat_integration?version=7#b_67) with [Synology Chat](https://www.synology.com/en-global/dsm/feature/chat)
 
 ## Usage
 
-it also needs your Synology Chat Bot's token and incoming url (host), set them as environment variables before using the app:
+Install `ollama` and download `gemma:7b` on your mac
+```
+ollama pull gemma:7b
+ollama server
+```
+
+It also needs your Synology Chat Bot's token and incoming URL (host), set them as environment variables before using the app:
 ```bash
 export export SYNOLOGY_TOKEN='...'
 export export SYNOLOGY_INCOMING_URL='...'
@@ -22,3 +29,7 @@ pip install -r requirements.txt
 
 python synogpt.py
 ```
+
+## TODO
+[] Docker
+[] RAG
