@@ -106,6 +106,8 @@ class IncomingWebhook(object):
 				raise InvalidPayloadError()
 			elif error_code == 404:
 				raise InvalidTokenError()
+			elif error_code == 410:
+				raise MsgTooLongError()
 			elif error_code == 411:
 				raise RateLimitError()
 			else:

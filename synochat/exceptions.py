@@ -45,6 +45,11 @@ class RateLimitError(Error):
         self.message = message
         super().__init__(self.message)
 
+class MsgTooLongError(Error):
+    """ Raised when msg too long. """
+    def __init__(self, message="msg too long."):
+        self.message = message
+        super().__init__(self.message)
 
 class UnknownApiError(Error):
     """
