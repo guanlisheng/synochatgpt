@@ -76,8 +76,8 @@ def echo():
     if not webhook.authenticate(token):
         return webhook.createResponse('Outgoing Webhook authentication failed: Token mismatch.')
 
-    url = os.environ.get("SYNOLOGY_INCOMING_URL")
-    bot = IncomingWebhook(url, port=5002, token=token, user_ids=[webhook.user_id])
+    hostname = os.environ.get("SYNOLOGY_INCOMING_URL")
+    bot = IncomingWebhook(hostname, port=5002, token=token, user_ids=[webhook.user_id])
     if app.debug:
         print("\n" + webhook.text + "\n")
 
