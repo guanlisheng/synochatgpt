@@ -48,7 +48,7 @@ def process_gpt_response(webhook):
         messages.append({"role": role, "content": content})
 
     client = OpenAI(
-        base_url='http://127.0.0.1:11434/v1/',
+        base_url='http://localhost:11434/v1/',
 
         # required but ignored
         api_key='ollama',
