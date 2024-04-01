@@ -31,5 +31,5 @@ python synogpt.py
 ```
 
 ## TODO
-[] Docker
-[] RAG
+* [ ] Docker
+* [ ] RAG
