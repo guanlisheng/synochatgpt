@@ -27,7 +27,7 @@ export NO_PROXY=http://127.0.0.1
 ```bash
 pip install -r requirements.txt
 
-python synogpt.py
+python synochatgpt.py
 ```
 
 ## TODO
