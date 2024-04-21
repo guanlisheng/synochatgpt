@@ -56,7 +56,7 @@ def process_gpt_response(webhook):
     response = client.chat.completions.create(
         messages=messages,
         temperature=0.3,
-        model='gemma:7b',
+        model='llama3:8b',
     )
 
     response_role = response.choices[0].message.role
