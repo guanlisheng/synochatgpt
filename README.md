@@ -31,5 +31,6 @@ python synochatgpt.py
 ```
 
 ## TODO
+* [ ] Fine tune
 * [ ] Docker
 * [ ] RAG
