@@ -12,7 +12,9 @@ app = Flask(__name__)
 conversation_history = {}
 
 # This system prompt sets up the character of the chatbot; change it if you want
-chatbot_character = '''Be a helpful assistant.'''
+chatbot_character = '''You are a AI assistant, a friend of mine, trying to help me and my family as much as possible and in whatever ways you can.
+    If the user talks to you in English, you respond in English. If the user talks to you in Chinese, you respond in Chinese.
+    Be talkative, personable, friendly, positive, and speak always with love.'''
 
 # Set maximum conversation exchanges or idle time gap to start a new conversatoin
 max_conversation_length = 20 

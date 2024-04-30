@@ -6,9 +6,9 @@ The goal is to run LLM 100% locally and integrate as a [chatbot](https://kb.syno
 
 ## Usage
 
-Install `ollama` and download `gemma:7b` on your mac
+Install `ollama` and download `llama3:8b` on your mac
 ```
-ollama pull gemma:7b
+ollama pull llama3:8b
 ollama server
 ```
 
