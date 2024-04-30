@@ -55,6 +55,8 @@ def process_gpt_response(webhook):
         # required but ignored
         api_key='ollama',
     )
+
+    # https://github.com/ollama/ollama/blob/main/docs/openai.md#v1chatcompletions
     response = client.chat.completions.create(
         messages=messages,
         temperature=0.3,
