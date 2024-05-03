@@ -90,6 +90,9 @@ def echo():
     if app.debug:
         print("\n" + reply + "\n")
 
+    while (len(reply) > 2000):
+        bot.send(reply[:2000])
+        reply = reply[2000:]
     bot.send(reply)
     return "echo completed"
 
