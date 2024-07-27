@@ -59,8 +59,7 @@ def process_gpt_response(webhook):
     # https://github.com/ollama/ollama/blob/main/docs/openai.md#v1chatcompletions
     response = client.chat.completions.create(
         messages=messages,
-        temperature=0.3,
-        model='llama3:8b',
+        model='qwen2:7b',
     )
 
     response_role = response.choices[0].message.role
