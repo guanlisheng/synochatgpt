@@ -1,6 +1,7 @@
-from openai import OpenAI
+import shelve
 import time
 import os
+from openai import OpenAI
 
 from flask import Flask, request
 from synochat.webhooks import OutgoingWebhook
@@ -17,57 +18,52 @@ chatbot_character = '''You are a AI assistant, a friend of mine, trying to help 
     Be talkative, personable, friendly, positive, and speak always with love.'''
 
 # Set maximum chat exchanges or idle time gap to start a new conversatoin
-max_chat_length = 20 
-max_time_gap = 15 # minutes
+max_chat_length = 100 
 
 def process_gpt_response(webhook):
     system_prompt = chatbot_character
-
-    messages = [{"role": "system", "content": system_prompt}]
-
     user_id, username = webhook.user_id, webhook.username
-
     current_timestamp = int(time.time())
-    # Check if the chat has been idle for 30 minutes (1800 seconds)
-    if (user_id in chat_history and
-            current_timestamp - chat_history[user_id]["last_timestamp"] >= max_time_gap*60):
-        del chat_history[user_id]
 
-    # Maintain chat history
-    if user_id not in chat_history:
-        chat_history[user_id] = {"username": username, "messages": [], "last_timestamp": current_timestamp}
-    else:
-        chat_history[user_id]["last_timestamp"] = current_timestamp
-        # Truncate chat history if it exceeds the maximum length
-        if len(chat_history[user_id]["messages"]) > max_chat_length:
-            chat_history[user_id]["messages"] = chat_history[user_id]["messages"][-max_chat_length:]
+    # Open the shelve file to store chat history
+    with shelve.open('chat_history.db', writeback=True) as chat_history:
 
-    chat_history[user_id]["messages"].append({"role": "user", "content": webhook.text})
+        # Maintain chat history
+        if user_id not in chat_history:
+            chat_history[user_id] = {"username": username, "messages": [], "last_timestamp": current_timestamp}
+        else:
+            chat_history[user_id]["last_timestamp"] = current_timestamp
+            # Truncate chat history if it exceeds the maximum length
+            if len(chat_history[user_id]["messages"]) > max_chat_length:
+                chat_history[user_id]["messages"] = chat_history[user_id]["messages"][-max_chat_length:]
 
-    for entry in chat_history[user_id]["messages"]:
-        role = entry['role']
-        content = entry['content']
-        messages.append({"role": role, "content": content})
+        # Append the user's message
+        chat_history[user_id]["messages"].append({"role": "user", "content": webhook.text})
 
-    client = OpenAI(
-        base_url='http://localhost:11434/v1/',
+        # Prepare the message list for the API call
+        messages = [{"role": "system", "content": system_prompt}]
+        for entry in chat_history[user_id]["messages"]:
+            messages.append({"role": entry['role'], "content": entry['content']})
 
-        # required but ignored
-        api_key='ollama',
-    )
+        client = OpenAI(
+            base_url='http://localhost:11434/v1/',
+            api_key='ollama',  # required but ignored
+        )
 
-    # https://github.com/ollama/ollama/blob/main/docs/openai.md#v1chatcompletions
-    response = client.chat.completions.create(
-        messages=messages,
-        model='qwen2:7b',
-    )
+        # Make the API call to the model
+        response = client.chat.completions.create(
+            messages=messages,
+            model='qwen2:7b',
+        )
 
-    response_role = response.choices[0].message.role
-    if response.choices[0].finish_reason == "stop":
-        response_text = response.choices[0].message.content
-        chat_history[user_id]["messages"].append({"role": response_role, "content": response_text})
-    else:
-        chat_history[user_id]["messages"].append({"role": response_role, "content": f"error: stop reason - {response.choices[0].finish_reason}"})
+        # Process the response and update chat history
+        response_role = response.choices[0].message.role
+        if response.choices[0].finish_reason == "stop":
+            response_text = response.choices[0].message.content
+            chat_history[user_id]["messages"].append({"role": response_role, "content": response_text})
+        else:
+            response_text = f"error: stop reason - {response.choices[0].finish_reason}"
+            chat_history[user_id]["messages"].append({"role": response_role, "content": response_text})
 
     return response_text
 
