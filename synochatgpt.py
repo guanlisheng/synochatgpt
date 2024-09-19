@@ -26,7 +26,7 @@ def process_gpt_response(webhook):
     current_timestamp = int(time.time())
 
     # Open the shelve file to store chat history
-    with shelve.open('chat_history.db', writeback=True) as chat_history:
+    with shelve.open('chat_history', writeback=True) as chat_history:
 
         # Maintain chat history
         if user_id not in chat_history:
@@ -53,7 +53,7 @@ def process_gpt_response(webhook):
         # Make the API call to the model
         response = client.chat.completions.create(
             messages=messages,
-            model='qwen2:7b',
+            model='qwen2.5:7b',
         )
 
         # Process the response and update chat history
