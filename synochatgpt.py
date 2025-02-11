@@ -53,7 +53,7 @@ def process_gpt_response(webhook):
         # Make the API call to the model
         response = client.chat.completions.create(
             messages=messages,
-            model='qwen2.5:7b',
+            model='deepseek-r1:7b',
         )
 
         # Process the response and update chat history
@@ -70,7 +70,7 @@ def process_gpt_response(webhook):
 @app.route('/echo', methods=['POST'])
 def echo():
     token = os.environ.get("SYNOLOGY_TOKEN")
-    webhook = OutgoingWebhook(request.form, token, verbose=True)
+    webhook = OutgoingWebhook(request.form, token, verbose=False)
 
     if not webhook.authenticate(token):
         return webhook.createResponse('Outgoing Webhook authentication failed: Token mismatch.')
