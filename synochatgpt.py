@@ -1,8 +1,11 @@
 import shelve
+import textwrap
 import time
 import os
-from openai import OpenAI
+import re
+import requests
 
+from openai import OpenAI
 from flask import Flask, request
 from synochat.webhooks import OutgoingWebhook
 from synochat.webhooks import IncomingWebhook
@@ -13,12 +16,60 @@ app = Flask(__name__)
 chat_history = {}
 
 # This system prompt sets up the character of the chatbot; change it if you want
-chatbot_character = '''You are a AI assistant, a friend of mine, trying to help me and my family as much as possible and in whatever ways you can.
-    If the user talks to you in English, you respond in English. If the user talks to you in Chinese, you respond in Chinese.
-    Be talkative, personable, friendly, positive, and speak always with love.'''
+chatbot_character = '''You are a helpful, friendly AI assistant working inside a simple text interface (like SMS or terminal).
+The user interacts with you via Synology Chat, which only supports plain text, line breaks, and emojis.
+
+❗ IMPORTANT OUTPUT RULES:
+- Keep responses simple and structured.
+- Use blank lines (`\n\n`) to separate sections.
+- Use emoji (✅ ❌ ⚠️ 📌 🧠 💡) to improve readability.
+- DO NOT use Markdown (e.g. `**bold**`, `# heading`, or code blocks).
+- Avoid very long paragraphs – break them into shorter pieces.
+- Do not use tables or rich formatting; describe them instead.
+
+If the user asks for a list, use this format:
+1️⃣ First item
+2️⃣ Second item
+3️⃣ Third item
+
+If showing a block of commands, do it like this:
+
+📦 Command Example:
+curl http://localhost:11434
+
+You speak in the language the user uses. Be clear, helpful, and friendly.'''
 
 # Set maximum chat exchanges or idle time gap to start a new conversatoin
 max_chat_length = 100 
+
+def format_think_tags(text: str) -> str:
+    def replace_think(match):
+        thought = match.group(1).strip()
+        return f"\n🧠 我的思考：\n{thought}\n——————————————\n"
+
+    text = re.sub(r"<think>(.*?)</think>", replace_think, text, flags=re.DOTALL)
+    lines = [line.strip() for line in text.splitlines()]
+    return "\n".join(line for line in lines if line)
+
+def list_ollama_models():
+    try:
+        res = requests.get("http://localhost:11434/api/tags")
+        res.raise_for_status()
+        models = [m["name"] for m in res.json().get("models", [])]
+
+        if not models:
+            return "⚠️ 当前没有本地模型，请先使用 `ollama pull` 下载。"
+
+        # 格式化输出，适配 Synology Chat
+        lines = ["📚 当前可用模型：", "——————————————"]
+        for i, m in enumerate(models, 1):
+            lines.append(f"{i}️⃣ {m}")
+        lines.append("——————————————")
+        lines.append("使用命令：/model 模型名\n例如：`/model llama3`")
+        return "\n".join(lines)
+
+    except Exception as e:
+        return f"⚠️ 获取模型列表失败: {str(e)}"
 
 def process_gpt_response(webhook):
     system_prompt = chatbot_character
@@ -27,6 +78,25 @@ def process_gpt_response(webhook):
 
     # Open the shelve file to store chat history
     with shelve.open('chat_history', writeback=True) as chat_history:
+
+        text = webhook.text.strip()
+        if text.startswith("/model"):
+            args = text.split()
+
+            if len(args) == 1:
+                current = chat_history.get(user_id, {}).get("model", "deepseek-r1")
+                return f"🧠 当前模型是：`{current}`"
+            
+            elif args[1] == "list":
+                models = list_ollama_models()
+                return "📚 当前可用模型列表：\n- " + "\n- ".join(models)
+            else:
+                new_model = args[1]
+                if user_id not in chat_history:
+                    chat_history[user_id] = {"messages": [], "model": new_model}
+                else:
+                    chat_history[user_id]["model"] = new_model
+                return f"✅ 模型已切换为：`{new_model}`"
 
         # Maintain chat history
         if user_id not in chat_history:
@@ -51,15 +121,17 @@ def process_gpt_response(webhook):
         )
 
         # Make the API call to the model
+        model = chat_history[user_id].get("model", "deepseek-r1")
         response = client.chat.completions.create(
             messages=messages,
-            model='deepseek-r1:7b',
+            model=model,
         )
 
         # Process the response and update chat history
         response_role = response.choices[0].message.role
         if response.choices[0].finish_reason == "stop":
-            response_text = response.choices[0].message.content
+            raw_response = response.choices[0].message.content
+            response_text = format_think_tags(raw_response)
             chat_history[user_id]["messages"].append({"role": response_role, "content": response_text})
         else:
             response_text = f"error: stop reason - {response.choices[0].finish_reason}"
@@ -85,10 +157,9 @@ def echo():
     if app.debug:
         print("\n" + reply + "\n")
 
-    while (len(reply) > 2000):
-        bot.send(reply[:2000])
-        reply = reply[2000:]
-    bot.send(reply)
+    for chunk in textwrap.wrap(reply, width=1800):
+        bot.send(chunk)
+
     return "echo completed"
 
 if __name__ == '__main__':
